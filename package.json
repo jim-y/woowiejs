@@ -1,0 +1,28 @@
+{
+  "name": "woowieJs",
+  "version": "0.1.0",
+  "description": "Woowie is a minimalistic javascript library for the web. It aims to give a better/shorter syntax for requesting elements from the DOM, making ajax requests, and adding/removing attributes to/from DOM elements. ",
+  "main": "lib/woowie.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jim-y/woowiejs.git"
+  },
+  "keywords": [
+    "javascript",
+    "library",
+    "jquery",
+    "dom",
+    "traversing",
+    "lightweight",
+    "node"
+  ],
+  "author": "Attila Kling",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jim-y/woowiejs/issues"
+  },
+  "homepage": "https://github.com/jim-y/woowiejs"
+}
