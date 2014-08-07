@@ -1,5 +1,7 @@
-
-/* globals module, require, console */
+/* woowie - v0.1.0 - 2014-08-07
+ * https://github.com/jim-y/woowiejs
+ * Copyright (c) 2014 Attila Kling; Licensed MIT 
+ */
 
 (function(global, undefined) {
 

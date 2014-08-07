@@ -1,0 +1,34 @@
+<html>
+<head>
+  <title>Test Woowie</title>
+  <script src="/home/jim/projects/woowieJs/dist/bundle.woowie.js"></script>
+</head>
+<body>
+  <div id="container">
+    <div class="task">One</div>
+    <div class="task">Two</div>
+    <div class="task">Three</div>
+  </div>
+  <script type="text/javascript">
+    var _tasks = w('.task');
+
+    [].forEach.call(_tasks, function(item) {
+      item.addEventListener('click', function(event) {
+        var promise = w.ajax({
+          url: 'tinyurl.com/api-create.php?url=http://prohardver.hu/',
+          type: 'GET',
+          contentType: "text/html"
+        });
+
+        promise.onFulfill(function(result) {
+          console.log(result);
+        });
+
+        promise.onReject(function(err) {
+          console.log(err);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
