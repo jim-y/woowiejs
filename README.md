@@ -1,7 +1,7 @@
 Woowie
 ======
 
-#### :recycle: Woowie is under initial development. First stable version not released yet.
+#### :recycle: Woowie is under development. First stable version not released yet.
 
   Lightweight JavaScript library for beginner web developers. Woowie have a jQuery like syntax, but it is 
   much more smaller. Actually, what i used almost always in jQuery was just a small subset of the original API.
