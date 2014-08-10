@@ -5,29 +5,32 @@
 </head>
 <body>
   <div id="container">
-    <div class="task">One</div>
-    <div class="task">Two</div>
-    <div class="task">Three</div>
+    <div class="task mark">One</div>
+    <div class="task mark">Two</div>
+    <div class="task mark">Three</div>
+
+    <div id="footer" class="">Footer</div>
   </div>
   <script type="text/javascript">
-    var _tasks = w('.task');
+    var _tasks = w('.task'),
+        _footer = w('#footer');
 
-    [].forEach.call(_tasks, function(item) {
-      item.addEventListener('click', function(event) {
-        var promise = w.ajax({
-          url: 'tinyurl.com/api-create.php?url=http://prohardver.hu/',
-          type: 'GET',
-          contentType: "text/html"
-        });
+    _tasks.each(function(task) {
+      console.log( w(task).text() );
+    });
 
-        promise.onFulfill(function(result) {
-          console.log(result);
-        });
+    var mapped = _tasks.map(function(item, index) {
+      return w(item).text() + ' ' + index;
+    });
+    
+    console.log(mapped); 
 
-        promise.onReject(function(err) {
-          console.log(err);
-        });
-      });
+    console.log( _tasks.hasClass('mark') );
+
+    console.log( _footer.hasClass('footer') );
+
+    w.each(_tasks, function(task) {
+      console.log( w(task).text() );
     });
   </script>
 </body>

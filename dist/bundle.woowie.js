@@ -6,52 +6,59 @@
 
   'use strict';
 
-  var version = '0.0.1',
-    arr = [],
-    document = global.document,
-    push = arr.push,
-    each = arr.forEach,
-    adnEach,
-    w = function(selector) {
-      return new Woowie(selector).result;
-    };
+  var _version = '0.0.1',
+      document = global.document,
+      woowie = function( selector ) {
+        return new Woowie( selector );
+      };
 
-  var Promise = require('mpromise');
+  var Promise = require( 'mpromise' );
 
-  function Woowie(selector, obj) {
+  /**
+   * The main Woowie constructor.
+   * If `selector` is a string, we use querySelectorAll to get all dom elements.
+   * If selector has a length property, it is a NodeList.
+   * Otherwise, its a single element.
+   * @param {string|NodeList} selector
+   */
+  function Woowie( selector ) {
 
-    var isClassSelector = selector.indexOf('.') > -1 && selector.indexOf('.') === 0,
-      isIdSelector = selector.indexOf('#') > -1 && selector.indexOf('#') === 0;
+    var elements;
 
-    if (isClassSelector) {
-      //this.result = queryAll(selector);
-      this.result = document.querySelectorAll(selector);
+    if ( typeof selector === "string" ) {
+      elements = document.querySelectorAll( selector );
     }
-    else if (isIdSelector) {
-      this.result = document.querySelector(selector);
+    else if ( selector.length ) {
+      elements = selector;
     }
-    else if (selector !== '') {
-      this.result = document.querySelectorAll(selector);
+    else {
+      elements = [selector];
     }
 
-    if (obj) {
-      this.result = obj;
+    for( var i = 0; i < elements.length; ++i ) {
+      this[i] = elements[i];
     }
+
+    this.length = elements.length;
+
   }
 
-  w.each = function(adnobj, callback) {
-    each.call(adnobj.result, callback);
-  };
+  /**
+   * Prototype method for woowie.each()
+   * @param  {Woowie}   obj
+   * @param  {Function} callback
+   * @return {void}
+   */
+  function _each( obj, callback ) {
+    [].forEach.call( obj, callback );
+  }
 
-  w.version = function() {
-    return version;
-  };
+  /**
+   * Prototype method for woowie.ajax()
+   * @return {[type]}
+   */
+  function _ajax( options ) {
 
-  w.to = function(item) {
-    return new Woowie('', item);
-  };
-
-  w.ajax = function(options) {
     var url = options.url,
       type = options.type,
       contentType = options.contentType || 'text',
@@ -102,31 +109,109 @@
     }
 
     return promise;
+  }
 
+  /**
+   * Static methods and properties. Can be called as w.methodName()
+   */
+  woowie.each = _each;
+  woowie.ajax = _ajax;
+  woowie.version = _version;
+
+
+  /**
+   * Instance methods and properties. Can be called as w(selector).methodName()
+   */
+  Woowie.prototype.selector = "";
+  Woowie.prototype.length = 0;
+  
+  /**
+   * each instance method
+   * @param  {Function} callback
+   * @return {void}
+   */
+  Woowie.prototype.each = function( callback ) {
+    _each( this, callback );
+    return this;
   };
 
-  Woowie.prototype = {
-    constructor: Woowie,
-    selector: "",
-    length: 0,
-    each: function(callback) {
-      each.call(this.result, callback);
-    },
-    text: function(text) {
-      if (text) {
-        this.result.textContent = text;
-        return;
+  /**
+   * map instance method
+   * @param  {Function} projection
+   * @return {array}
+   */
+  Woowie.prototype.map = function( projection ) {
+
+    var results = [],
+        currentValue,
+        index,
+        arrayToIterateOn = this;
+
+    for( var i = 0; i < this.length; ++i ) {
+      currentValue = this[i];
+      index = i;
+      results.push( projection.call( this, currentValue, index, arrayToIterateOn ) );
+    }
+
+    return results;   
+  };
+  
+  /**
+   * text instance method
+   * @param  {String|undefined} text
+   * @return {String|array<String>|Woowie}
+   */
+  Woowie.prototype.text = function( text ) {
+
+    var result;
+
+    if ( typeof text !== "undefined" ) {
+      result = this.each(function( element ) {
+        element.textContent = text;
+      });
+    }
+    else {
+      result = this.map(function( element ) {
+        return element.textContent;
+      });
+    }
+
+    return result.length > 1 ? result : result[0];
+  };
+
+  /**
+   * hasClass instance method to check if the element(s) has the class {classSelector}
+   * @param  {String}  classSelector
+   * @return {Boolean}
+   */
+  Woowie.prototype.hasClass = function( classSelector ) {
+
+    var result;
+    
+    this.each(function( element ) {
+
+      var isElementNode = element.nodeType === 1;
+      
+      if ( isElementNode && element.className.match( new RegExp( '(\\s|^)' + classSelector + '(\\s|$)' ) ) ) {
+        result = true;    
+      }
+      else {
+        result = false || !isElementNode;
       }
 
-      return this.result.textContent;
-    }
+    });
+    
+    return result; 
   };
 
-  window.w = w;
+  /**
+   * Setting globals
+   */
+  global.woowie = global.w = woowie;
 
-  return w;
+  return woowie;
 
-}(window, undefined));
+}(window));
 
 },{"mpromise":4}],2:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
