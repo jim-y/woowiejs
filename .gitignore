@@ -29,3 +29,6 @@ node_modules
 
 # sublime files
 .sublime-grunt.cache
+
+# bower_components
+bower_components

@@ -1,6 +1,10 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/* woowie - v0.1.0 - 2014-08-16
+ * https://github.com/jim-y/woowiejs
+ * Copyright (c) 2014 Attila Kling; Licensed MIT 
+ */
 
-/* globals module, require, console */
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/* global require, console */
 
 (function(global, undefined) {
 
@@ -8,6 +12,7 @@
 
   var _version = '0.0.1',
       document = global.document,
+      hasClassList = "classList" in document.createElement("_"),
       woowie = function( selector ) {
         return new Woowie( selector );
       };
@@ -25,7 +30,10 @@
 
     var elements;
 
-    if ( typeof selector === "string" ) {
+    if ( !selector ) {
+      elements = [];
+    }
+    else if ( typeof selector === "string" ) {
       elements = document.querySelectorAll( selector );
     }
     else if ( selector.length ) {
@@ -35,12 +43,12 @@
       elements = [selector];
     }
 
-    for( var i = 0; i < elements.length; ++i ) {
+    for ( var i = 0; i < elements.length; ++i ) {
       this[i] = elements[i];
     }
 
     this.length = elements.length;
-
+    this.selector = selector;
   }
 
   /**
@@ -60,52 +68,59 @@
   function _ajax( options ) {
 
     var url = options.url,
-      type = options.type,
-      contentType = options.contentType || 'text',
-      data = options.data,
-      //success = options.success,
-      //error = options.error,
-      request;
-
-    var promise = new Promise();
+        type = options.type || 'GET',
+        content = options.content || 'application/json',
+        data = null,
+        request,
+        promise = new Promise();
 
     request = new XMLHttpRequest();
 
-    try {
-      request.open(type, url, true);
+    if ( type === 'POST' ) {
+      request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+      data = options.data;
     }
-    catch(openError) {
-      console.log('openError');
-      promise.reject(openError);
+    
+    if ("withCredentials" in request){
+      try {
+        request.open(type, url, true);
+      }
+      catch(openError) {
+        promise.reject(openError);
+      }
+    } 
+    else if (typeof global.XDomainRequest !== "undefined"){
+      request = new global.XDomainRequest();
+      try {
+        request.open(type, url, true);
+      }
+      catch(openError) {
+        promise.reject(openError);
+      }
     }
-
-    request.setRequestHeader('Content-Type', contentType);
+    else {
+      request = null;
+      promise.reject(new Error('return null'));
+    }
 
     request.onload = function() {
       if (request.status >= 200 && request.status < 400) {
         promise.fulfill(request.responseText);
-        //success(request.responseText);
       }
       else {
-        console.log('Error');
         promise.reject(new Error('There was an error'));
-        //error(new Error('There was an error'));
       }
     };
 
     request.onerror = function() {
-      console.log('Connection Error');
       promise.reject(new Error('Connection error'));
-      //error(new Error('Connection error'));
     };
 
     try {
-      request.send();
+      request.send(data);
     }
     catch(networkError) {
-      console.log('networkError');
       promise.reject(new Error(networkError));
-      //error(networkError);
     }
 
     return promise;
@@ -122,8 +137,6 @@
   /**
    * Instance methods and properties. Can be called as w(selector).methodName()
    */
-  Woowie.prototype.selector = "";
-  Woowie.prototype.length = 0;
   
   /**
    * each instance method
@@ -153,7 +166,7 @@
       results.push( projection.call( this, currentValue, index, arrayToIterateOn ) );
     }
 
-    return results;   
+    return results;
   };
   
   /**
@@ -181,10 +194,10 @@
 
   /**
    * hasClass instance method to check if the element(s) has the class {classSelector}
-   * @param  {String}  classSelector
+   * @param  {String}  cls
    * @return {Boolean}
    */
-  Woowie.prototype.hasClass = function( classSelector ) {
+  Woowie.prototype.hasClass = function( cls ) {
 
     var result;
     
@@ -192,8 +205,11 @@
 
       var isElementNode = element.nodeType === 1;
       
-      if ( isElementNode && element.className.match( new RegExp( '(\\s|^)' + classSelector + '(\\s|$)' ) ) ) {
-        result = true;    
+      if ( isElementNode && hasClassList && element.classList.contains( cls ) ) {
+        result = true;
+      }
+      else if ( isElementNode && element.className.match( new RegExp( '(\\s|^)' + cls + '(\\s|$)' ) ) ) {
+        result = true;
       }
       else {
         result = false || !isElementNode;
@@ -205,6 +221,53 @@
   };
 
   /**
+   * addClass instance method to add class selector to the element node given by the parameter
+   * @param {String} cls - the name of the class to add
+   * @return {Woowie}    - returning Woowie object
+   */
+  Woowie.prototype.addClass = function( cls ) {
+
+    this.each(function( element ) {
+
+      var isElementNode = element.nodeType === 1;
+
+      if ( isElementNode && hasClassList && !element.classList.contains( cls ) ) {
+        element.classList.add( cls );
+      }
+      else if ( isElementNode && !woowie( element ).hasClass( cls ) ) {
+        element.className += " " + cls;
+      }
+
+    });
+
+    return this;
+  };
+
+  /**
+   * removeClass instance method to remove existing classes from an element
+   * @param  {String} cls - the class to be added
+   * @return {Woowie}     - returning Woowie object
+   */
+  Woowie.prototype.removeClass = function( cls ) {
+    
+    this.each(function( element ) {
+      
+      var isElementNode = element.nodeType === 1;
+
+      if ( isElementNode && hasClassList && element.classList.contains( cls ) ) {
+        element.classList.remove( cls );
+      }
+      else if ( isElementNode && woowie( element ).hasClass( cls ) ) {
+        var reg = new RegExp( '(\\s|^)' + cls + '(\\s|$)' );
+        element.className = element.className.replace( reg, ' ' );
+      }
+
+    });
+
+    return this;
+  };
+
+  /**
    * Setting globals
    */
   global.woowie = global.w = woowie;
@@ -212,7 +275,6 @@
   return woowie;
 
 }(window));
-
 },{"mpromise":4}],2:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //

@@ -18,8 +18,8 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['lib/<%= pkg.name %>.js'],
-        dest: 'dist/<%= pkg.name %>.js'
+        src: ['dist/bundle.<%= pkg.name %>.js'],
+        dest: 'dist/bundle.<%= pkg.name %>.js'
       }
     },
     browserify: {
@@ -58,8 +58,21 @@ module.exports = function(grunt) {
       gruntfile: {
         src: 'Gruntfile.js'
       },
-      lib_test: {
-        src: ['lib/**/*.js', 'test/**/*.js']
+      test: {
+        src: ['spec/**/*.js']
+      },
+      lib: {
+        src: ['lib/**/*.js']
+      }
+    },
+    jasmine: {
+      pivotal: {
+        src: 'dist/bundle.woowie.js',
+        options: {
+          specs: 'spec/*Spec.js',
+          helpers: 'spec/*Helper.js',
+          vendor: 'bower_components/jquery/dist/jquery.min.js'
+        }
       }
     },
     watch: {
@@ -67,9 +80,13 @@ module.exports = function(grunt) {
         files: '<%= jshint.gruntfile.src %>',
         tasks: ['jshint:gruntfile']
       },
-      lib_test: {
-        files: '<%= jshint.lib_test.src %>',
-        tasks: ['jshint:lib_test']
+      test: {
+        files: '<%= jshint.test.src %>',
+        tasks: ['jshint:test', 'jasmine']
+      },
+      lib: {
+        files: '<%= jshint.lib.src %>',
+        tasks: ['jshint:lib', 'browserify', 'concat', 'uglify']
       }
     }
   });
@@ -79,9 +96,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-browserify');
 
   // Default task.
+  grunt.registerTask('test', ['jshint', 'jasmine']);
   grunt.registerTask('default', ['jshint', 'browserify', 'concat', 'uglify']);
 
 };

@@ -20,7 +20,8 @@
     "node"
   ],
   "author": {
-    "name":"Attila Kling"
+    "name":"Attila Kling",
+    "email": "attila.kling@gmail.com"
   },
   "license": "MIT",
   "bugs": {
